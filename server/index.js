@@ -23,7 +23,8 @@ const server = app.listen(process.env.PORT, () => {
 
 const io = new Server(server, {
   cors: {
-    origin: process.env.CLIENT_ORIGIN,
+    // origin: process.env.CLIENT_ORIGIN,
+    origins:[process.env.CLIENT_ORIGIN,"http://localhost:3000"]
   },
 });
 io.engine.on("connection_error", (err) => {
