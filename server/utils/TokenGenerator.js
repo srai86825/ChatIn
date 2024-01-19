@@ -76,8 +76,9 @@ export function generateToken04(
       errorMessage:
         "secret must be a 32 byte string: " +
         secret +
-        `and secret type${typeof secret} verification: ${
-          typeof secret !== "string"
+        ` secret len: ${secret.length}, !secret: ${!secret}` +
+        `and secret type: ${typeof secret} verification: ${
+          !secret || typeof secret !== "string" || secret.length !== 32
         }`,
     };
   }
