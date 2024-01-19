@@ -73,7 +73,12 @@ export function generateToken04(
     // Check if secret is valid
     throw {
       errorCode: ErrorCode.secretInvalid,
-      errorMessage: "secret must be a 32 byte string: "+secret,
+      errorMessage:
+        "secret must be a 32 byte string: " +
+        secret +
+        `and secret type${typeof secret} verification: ${
+          typeof secret !== "string"
+        }`,
     };
   }
   if (!effectiveTimeInSeconds || typeof effectiveTimeInSeconds !== "number") {
