@@ -24,7 +24,7 @@ const server = app.listen(process.env.PORT, () => {
 const io = new Server(server, {
   cors: {
     // origin: process.env.CLIENT_ORIGIN,
-    origins:[process.env.CLIENT_ORIGIN,"http://localhost:3000"]
+    origins: [process.env.CLIENT_ORIGIN, "http://localhost:3000"],
   },
 });
 io.engine.on("connection_error", (err) => {
@@ -40,6 +40,9 @@ io.on("connection", (socket) => {
 
   socket.on("add-user", (userId) => {
     onlineUsers.set(userId, socket.id);
+    socket.broadcast.emit("online-users", {
+      onlineUsers: Array.from(onlineUsers.keys()),
+    });
   });
 
   socket.on("send-msg", (data) => {
@@ -54,7 +57,7 @@ io.on("connection", (socket) => {
 
   socket.on("outgoing-voice-call", (data) => {
     const sendUserSocket = onlineUsers.get(data.to);
-    console.log("received voice call", data, "reciverSocket", sendUserSocket);
+    console.log("received voice call", "from"+data.from, " to: "+data.to);
 
     if (sendUserSocket) {
       socket.to(sendUserSocket).emit("rcv-voice-call", {
@@ -67,7 +70,7 @@ io.on("connection", (socket) => {
 
   socket.on("outgoing-video-call", (data) => {
     const sendUserSocket = onlineUsers.get(data.to);
-    console.log("received video call", data, "reciverSocket", sendUserSocket);
+    console.log("received video call", "from"+data.from, " to: "+data.to);
 
     if (sendUserSocket) {
       socket.to(sendUserSocket).emit("rcv-video-call", {
@@ -81,7 +84,7 @@ io.on("connection", (socket) => {
 
   socket.on("reject-voice-call", (data) => {
     const sendUserSocket = onlineUsers.get(data.from);
-    console.log("recived reject call for", sendUserSocket);
+    console.log("recived reject call for", data.from);
 
     if (sendUserSocket) {
       socket.to(sendUserSocket).emit("rejected-voice-call");
@@ -90,7 +93,7 @@ io.on("connection", (socket) => {
 
   socket.on("reject-video-call", (data) => {
     const sendUserSocket = onlineUsers.get(data.from);
-    console.log("recived reject call for", sendUserSocket);
+    console.log("recived reject call for", data.from);
 
     if (sendUserSocket) {
       socket.to(sendUserSocket).emit("rejected-video-call");
@@ -99,7 +102,7 @@ io.on("connection", (socket) => {
 
   socket.on("accept-call", (data) => {
     const sendUserSocket = onlineUsers.get(data.id);
-    console.log("User accepted the call",data.id,sendUserSocket);
+    console.log("User accepted the call", data.id);
 
     if (sendUserSocket) {
       socket.to(sendUserSocket).emit("accepted-call", {
@@ -108,4 +111,11 @@ io.on("connection", (socket) => {
     }
   });
 
+  socket.on("signout", (data) => {
+    onlineUsers.delete(data.id);
+    console.log("user signout: ",data.id);
+    socket.broadcast.emit("online-users", {
+      onlineUsers: Array.from(onlineUsers.keys()),
+    });
+  });
 });
