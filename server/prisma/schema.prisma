@@ -19,6 +19,7 @@ model User {
   about          String @default("")
   sentMessages Messages[] @relation("sentMessages")
   receivedMessages Messages[] @relation("receivedMessages")
+  stories Stories[] @relation("addedStories")
 }
 
 model Messages {
@@ -33,3 +34,11 @@ model Messages {
   createdAt DateTime @default(now())
 }
 
+model Stories{
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+  userId String @db.ObjectId
+  creator User @relation("addedStories",fields: [userId],references: [id])
+  message String
+  type String @default("text")
+  createdAt DateTime @default(now())
+}

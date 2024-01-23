@@ -3,7 +3,9 @@ import cors from "cors";
 import dotenv from "dotenv";
 import authRoutes from "./routes/AuthRoutes.js";
 import messageRoutes from "./routes/MessageRoutes.js";
+import storyRoutes from "./routes/StoryRoutes.js";
 import { Server } from "socket.io";
+import createTTLIndex from "./utils/createTTLIndex.js";
 dotenv.config();
 const app = express();
 
@@ -16,12 +18,21 @@ app.use("/uploads/recordings", express.static("uploads/recordings"));
 //routes
 app.use("/api/auth", authRoutes);
 app.use("/api/messages", messageRoutes);
+app.use("/api/stories", storyRoutes);
+
 
 const server = app.listen(process.env.PORT, () => {
   console.log(`Server is running on port ${process.env.PORT}`);
+
+  //this is for creating Stories which has self destruct timing. ie this TimeToLiveIndex will apply 24hr
+  //lifespan to all the stories entry.
+  createTTLIndex();
 });
 
-const io = new Server(server, {
+try {
+  
+  
+  const io = new Server(server, {
   cors: {
     // origin: process.env.CLIENT_ORIGIN,
     origins: [process.env.CLIENT_ORIGIN, "http://localhost:3000"],
@@ -37,14 +48,14 @@ io.engine.on("connection_error", (err) => {
 global.onlineUsers = new Map();
 io.on("connection", (socket) => {
   global.chatSocket = socket;
-
+  
   socket.on("add-user", (userId) => {
     onlineUsers.set(userId, socket.id);
     socket.broadcast.emit("online-users", {
       onlineUsers: Array.from(onlineUsers.keys()),
     });
   });
-
+  
   socket.on("send-msg", (data) => {
     const sendUserSocket = onlineUsers.get(data.to);
     if (sendUserSocket) {
@@ -54,11 +65,11 @@ io.on("connection", (socket) => {
       });
     }
   });
-
+  
   socket.on("outgoing-voice-call", (data) => {
     const sendUserSocket = onlineUsers.get(data.to);
     console.log("received voice call", "from"+data.from, " to: "+data.to);
-
+    
     if (sendUserSocket) {
       socket.to(sendUserSocket).emit("rcv-voice-call", {
         from: data.from,
@@ -67,11 +78,11 @@ io.on("connection", (socket) => {
       });
     }
   });
-
+  
   socket.on("outgoing-video-call", (data) => {
     const sendUserSocket = onlineUsers.get(data.to);
     console.log("received video call", "from"+data.from, " to: "+data.to);
-
+    
     if (sendUserSocket) {
       socket.to(sendUserSocket).emit("rcv-video-call", {
         from: data.from,
@@ -81,36 +92,36 @@ io.on("connection", (socket) => {
       // console.log("call sent")
     }
   });
-
+  
   socket.on("reject-voice-call", (data) => {
     const sendUserSocket = onlineUsers.get(data.from);
     console.log("recived reject call for", data.from);
-
+    
     if (sendUserSocket) {
       socket.to(sendUserSocket).emit("rejected-voice-call");
     }
   });
-
+  
   socket.on("reject-video-call", (data) => {
     const sendUserSocket = onlineUsers.get(data.from);
     console.log("recived reject call for", data.from);
-
+    
     if (sendUserSocket) {
       socket.to(sendUserSocket).emit("rejected-video-call");
     }
   });
-
+  
   socket.on("accept-call", (data) => {
     const sendUserSocket = onlineUsers.get(data.id);
     console.log("User accepted the call", data.id);
-
+    
     if (sendUserSocket) {
       socket.to(sendUserSocket).emit("accepted-call", {
         id: data.id,
       });
     }
   });
-
+  
   socket.on("signout", (data) => {
     onlineUsers.delete(data.id);
     console.log("user signout: ",data.id);
@@ -119,3 +130,7 @@ io.on("connection", (socket) => {
     });
   });
 });
+
+} catch (error) {
+  console.log("Faced error with socket: ",error);
+}

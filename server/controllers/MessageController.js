@@ -11,6 +11,8 @@ export const addMessage = async (req, res, next) => {
     if (message && from && to) {
       const sender = { id: from };
       const receiver = { id: to };
+      console.log("recvd msg: ",from,to)
+      
 
       const newMessage = await prisma.messages.create({
         data: {
