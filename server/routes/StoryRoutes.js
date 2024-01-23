@@ -6,7 +6,7 @@ import { addStory,fetchStories } from "../controllers/StoryController.js";
 const router = new Router();
 
 router.post("/add-story", addStory);
-router.post("/fetch-all-stories", fetchStories);
+router.get("/fetch-all-stories", fetchStories);
 
 
 export default router;
