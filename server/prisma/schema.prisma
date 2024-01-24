@@ -12,33 +12,76 @@ datasource db {
 }
 
 model User {
-  id             String @id @default(auto()) @map("_id") @db.ObjectId
-  email          String @unique
-  name           String
-  profilePicture String @default("/default_avatar.png")
-  about          String @default("")
-  sentMessages Messages[] @relation("sentMessages")
+  id               String     @id @default(auto()) @map("_id") @db.ObjectId
+  email            String     @unique
+  name             String
+  profilePicture   String     @default("/default_avatar.png")
+  about            String     @default("")
+  
+  sentMessages     Messages[] @relation("sentMessages")
   receivedMessages Messages[] @relation("receivedMessages")
-  stories Stories[] @relation("addedStories")
+  stories          Stories[]  @relation("addedStories")
+  apiKeys          ApiKeys[]  @relation("addedApiKeys")
+  selectedAnswers Answers[] @relation("answeredBy")
 }
 
 model Messages {
-  id String @id @default(auto()) @map("_id") @db.ObjectId
-  senderId String @db.ObjectId 
-  sender User @relation("sentMessages",fields: [senderId],references: [id])
-  receiverId String @db.ObjectId 
-  receiver User @relation("receivedMessages",fields: [receiverId],references: [id])
-  type String @default("text")
-  message String
-  messageStatus String @default("sent")
-  createdAt DateTime @default(now())
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  senderId      String   @db.ObjectId
+  sender        User     @relation("sentMessages", fields: [senderId], references: [id])
+  receiverId    String   @db.ObjectId
+  receiver      User     @relation("receivedMessages", fields: [receiverId], references: [id])
+  type          String   @default("text")
+  message       String
+  messageStatus String   @default("sent")
+  createdAt     DateTime @default(now())
 }
 
-model Stories{
-  id String @id @default(auto()) @map("_id") @db.ObjectId
-  userId String @db.ObjectId
-  creator User @relation("addedStories",fields: [userId],references: [id])
-  message String
-  type String @default("text")
+model Stories {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  message   String
+  type      String   @default("text")
   createdAt DateTime @default(now())
+
+  userId    String   @db.ObjectId
+
+  creator   User     @relation("addedStories", fields: [userId], references: [id])
+}
+
+model ApiKeys {
+  id       String @id @default(auto()) @map("_id") @db.ObjectId
+  userId   String @db.ObjectId
+  owner    User   @relation("addedApiKeys", fields: [userId], references: [id])
+  key      String
+  provider String @default("openai")
+}
+
+model Options {
+  id      String @id @default(auto()) @map("_id") @db.ObjectId
+  option  String
+
+  pollId  String @db.ObjectId
+
+  forPoll Poll   @relation("hasOptions", fields: [pollId], references: [id])
+  answers Answers[] @relation("selectedAnswer") 
+}
+
+model Poll {
+  id       String    @id @default(auto()) @map("_id") @db.ObjectId
+  question String
+
+  options  Options[] @relation("hasOptions")
+  answers Answers[] @relation("answeredPoll")
+}
+
+model Answers {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+
+  optionId String @db.ObjectId
+  pollId String @db.ObjectId
+  userId String @db.ObjectId
+
+  selectedBy User @relation("answeredBy",fields: [userId],references: [id])
+  forPoll Poll @relation("answeredPoll",fields: [pollId],references: [id])
+  optionSelected Options @relation("selectedAnswer",fields: [optionId],references: [id])
 }

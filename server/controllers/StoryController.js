@@ -14,7 +14,7 @@ export const addStory = async (req, res, next) => {
       },
       include: { creator: true },
     });
- 
+
     return res.status(200).json(newStory);
   } catch (error) {
     console.log(error);
@@ -24,11 +24,24 @@ export const addStory = async (req, res, next) => {
 
 export const fetchStories = async (req, res, next) => {
   try {
+    const {userId} = req.params;
     const prisma = getPrismaInstance();
-    const stories = await prisma.stories.findMany();
-    console.log("fetched stories: ",stories)
+    let stories;
+    if (!userId) {
+      stories = await prisma.stories.findMany();
+    } else {
+      console.log("UserId",userId )
+      stories = await prisma.stories.findMany({
+        where: { userId: userId },
+        orderBy: {
+          createdAt: "asc",
+        },
+      });
+    }
+    // console.log("fetched stories: ", stories);
     res.status(200).json(stories);
   } catch (error) {
     console.log("Couldn't fetch stories", error);
+    next(error);
   }
 };
