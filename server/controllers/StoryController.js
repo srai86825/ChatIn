@@ -24,15 +24,16 @@ export const addStory = async (req, res, next) => {
 
 export const fetchStories = async (req, res, next) => {
   try {
-    const {userId} = req.params;
+    const { userId } = req.params;
     const prisma = getPrismaInstance();
     let stories;
     if (!userId) {
-      stories = await prisma.stories.findMany();
+      stories = await prisma.stories.findMany({ include: { creator: true } });
     } else {
-      console.log("UserId",userId )
+      console.log("UserId", userId);
       stories = await prisma.stories.findMany({
         where: { userId: userId },
+        include: { creator: true },
         orderBy: {
           createdAt: "asc",
         },
