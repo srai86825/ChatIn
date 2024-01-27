@@ -28,14 +28,32 @@ export const fetchStories = async (req, res, next) => {
     const prisma = getPrismaInstance();
     let stories;
     if (!userId) {
-      stories = await prisma.stories.findMany({ include: { creator: true } });
+      stories = await prisma.user.findMany({
+        where: { stories: { some: {} } },
+        select: {
+          profilePicture: true,
+          id: true,
+          name: true,
+          stories: {
+            orderBy: {
+              createdAt: "asc",
+            },
+          },
+        },
+      });
     } else {
-      console.log("UserId", userId);
-      stories = await prisma.stories.findMany({
-        where: { userId: userId },
-        include: { creator: true },
-        orderBy: {
-          createdAt: "asc",
+      console.log("UserId stories are being fetched", userId);
+      stories = await prisma.user.findMany({
+        where: { id: userId },
+        select: {
+          profilePicture: true,
+          id: true,
+          name: true,
+          stories: {
+            orderBy: {
+              createdAt: "asc",
+            },
+          },
         },
       });
     }
