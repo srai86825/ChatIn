@@ -22,6 +22,8 @@ export const addStory = async (req, res, next) => {
   }
 };
 
+
+
 export const fetchStories = async (req, res, next) => {
   try {
     const { userId } = req.params;

@@ -1,55 +1,81 @@
 import getPrismaInstance from "../utils/PrismaClient.js";
 import OpenAI from "openai";
 import { prompts } from "../utils/prompts.js";
+import { iceBreaker, wouldYouRather } from "../utils/demoPromptOutputs.js";
 
-export const fetchFeed = async (req, res, next) => {
+// export const fetchFeed = async (req, res, next) => {
+//   try {
+//     const { userId } = req.params;
+//     const prisma = getPrismaInstance();
+//     const user = await prisma.user.findUnique({
+//       where: { id: userId },
+//       include: {
+//         apiKeys: true,
+//       },
+//     });
+//     //   console.log(user);
+//     const apiKeyObject = user.apiKeys[0];
+
+//     if (apiKeyObject.provider === "openai") {
+//       const openai = new OpenAI({
+//         apiKey: apiKeyObject.key,
+//       });
+
+//       const wouldYouRatherResponse = await openai.chat.completions.create({
+//         messages: [
+//           {
+//             role: "user",
+//             content: prompts.wouldYouRather,
+//           },
+//         ],
+//         model: "gpt-3.5-turbo",
+//       });
+//       const seperatedQuestion =
+//         wouldYouRatherResponse.choices[0].message.content.split("#");
+//       const wouldYouRatherQuestion = {
+//         question: seperatedQuestion[0],
+//         options: seperatedQuestion.filter((m, i) => i !== 0),
+//       };
+
+//       const icebreaker = await openai.chat.completions.create({
+//         messages: [
+//           {
+//             role: "user",
+//             content: prompts.iceBreaker,
+//           },
+//         ],
+//         model: "gpt-3.5-turbo",
+//       });
+
+//       const icebreakers = icebreaker.choices[0].message.content.split("#");
+
+//       return res.status(200).json({ wouldYouRatherQuestion, icebreakers });
+//     }
+//   } catch (error) {
+//     console.log(error);
+//     res.status(500).json({ error });
+//   }
+// };
+
+export const fetchFeed = (req, res, next) => {
   try {
-    const { userId } = req.params;
-    const prisma = getPrismaInstance();
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      include: {
-        apiKeys: true,
-      },
-    });
-    //   console.log(user);
-    const apiKeyObject = user.apiKeys[0];
+    const wyr = wouldYouRather.split("@");
+    const iceb = iceBreaker.split("@");
+    const selectedWYR =
+      wyr[Math.floor(Math.random() * wyr.length)].split("#");
+    const selectedICEB =
+      iceb[Math.floor(Math.random() * iceb.length)].split("#");
 
-    if (apiKeyObject.provider === "openai") {
-      const openai = new OpenAI({
-        apiKey: apiKeyObject.key,
-      });
-
-      const wouldYouRatherResponse = await openai.chat.completions.create({
-        messages: [
-          {
-            role: "user",
-            content: prompts.wouldYouRather,
-          },
-        ],
-        model: "gpt-3.5-turbo",
-      });
-      const seperatedQuestion =
-        wouldYouRatherResponse.choices[0].message.content.split("#");
-      const wouldYouRatherQuestion = {
-        question: seperatedQuestion[0],
-        options: seperatedQuestion.filter((m, i) => i !== 0),
-      };
-
-      const icebreaker = await openai.chat.completions.create({
-        messages: [
-          {
-            role: "user",
-            content: prompts.iceBreaker,
-          },
-        ],
-        model: "gpt-3.5-turbo",
-      });
-
-      const icebreakers = icebreaker.choices[0].message.content.split("#");
-
-      return res.status(200).json({ wouldYouRatherQuestion, icebreakers });
+    const wouldYouRatherQuestion={
+      question:selectedWYR[0],
+      options:selectedWYR.filter((item,i)=>i!==0)
     }
+    const icebreakerQuestion={
+      question:selectedICEB[0],
+      options:selectedICEB.filter((item,i)=>i!==0)
+    }
+
+    return res.status(200).json({ wouldYouRatherQuestion, icebreakerQuestion });
   } catch (error) {
     console.log(error);
     res.status(500).json({ error });
