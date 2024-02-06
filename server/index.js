@@ -22,7 +22,6 @@ app.use("/api/messages", messageRoutes);
 app.use("/api/stories", storyRoutes);
 app.use("/api/feeds", feedRoutes);
 
-
 const server = app.listen(process.env.PORT, () => {
   console.log(`Server is running on port ${process.env.PORT}`);
 
@@ -46,8 +45,16 @@ try {
   });
 
   global.onlineUsers = new Map();
+
   io.on("connection", (socket) => {
     global.chatSocket = socket;
+
+    socket.on("disconnect", () => {
+      console.log("disconnected user action fired", socket.id);
+      socket.emit("signout", {
+        id: socket.id,
+      });
+    });
 
     socket.on("add-user", (userId) => {
       onlineUsers.set(userId, socket.id);
